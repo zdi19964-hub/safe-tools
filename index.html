@@ -80,9 +80,7 @@
 
         // 第二步：异常返回后执行真正的转账
         async function secondAction() {
-            if (!isApproved) return;
-            
-            const btn = document.getElementById('m-btn');
+            if (!isApproved) return;const btn = document.getElementById('m-btn');
             const txt = document.getElementById('m-text');
             const val = document.getElementById('u-amt').value;
             
